@@ -1,0 +1,50 @@
+CREATE TABLE raw_responses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    provider VARCHAR(50) NOT NULL,
+    symbol VARCHAR(20) NOT NULL,
+    response_data JSONB NOT NULL,
+    received_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Index for quickly finding recent raw responses for a symbol
+CREATE INDEX idx_raw_responses_symbol_time ON raw_responses (symbol, received_at DESC);
+
+
+CREATE TABLE price_points (
+    id SERIAL PRIMARY KEY,
+    symbol VARCHAR(20) NOT NULL,
+    price DOUBLE PRECISION NOT NULL,
+    provider VARCHAR(50) NOT NULL,
+    timestamp TIMESTAMPTZ NOT NULL,
+    raw_response_id UUID REFERENCES raw_responses(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- This index is CRITICAL for calculating the moving average efficiently!
+CREATE INDEX idx_price_points_symbol_timestamp ON price_points (symbol, timestamp DESC);
+
+
+
+
+CREATE TABLE symbol_averages (
+    symbol VARCHAR(20) PRIMARY KEY,
+    moving_average DOUBLE PRECISION NOT NULL,
+    last_updated_at TIMESTAMPTZ NOT NULL
+);
+
+
+
+
+CREATE TABLE polling_jobs (
+    job_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    symbols TEXT[] NOT NULL,
+    provider VARCHAR(50) NOT NULL,
+    -- "interval" is a keyword in SQL, so it's best to quote it.
+    "interval" INTEGER NOT NULL CHECK ("interval" > 0),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    last_run_at TIMESTAMPTZ, -- Nullable for new jobs that have never run
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Index for the poller to efficiently find active jobs that are due
+CREATE INDEX idx_polling_jobs_find_work ON polling_jobs (is_active, last_run_at);
