@@ -1,3 +1,4 @@
+import json
 import logging
 
 from confluent_kafka import Producer
@@ -30,15 +31,14 @@ def delivery_report(err, msg):
         logger.info(f"Message delivered to {msg.topic()} [{msg.partition()}] at offset {msg.offset()}")
 
 
-def publish_price_event(price_event : PricePoint):
+def publish_price_event(price_event):
     if producer is None:
         logger.error("Kafka Producer is not initialized.")
         return
 
     try:
-        event_value = price_event.model_dump_json().encode('utf-8')
-
-        event_key = price_event.symbol.encode('utf-8')
+        event_value = json.dumps(price_event).encode("utf-8")
+        event_key = price_event['symbol'].encode('utf-8')
 
         producer.produce(
             topic= settings.KAFKA_PRICE_TOPIC,

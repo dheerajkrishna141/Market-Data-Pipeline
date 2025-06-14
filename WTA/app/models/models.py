@@ -1,6 +1,6 @@
 from typing import Optional, List
 from uuid import UUID, uuid4
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Column, String, Integer
 from sqlalchemy.dialects.postgresql import JSONB
@@ -11,7 +11,7 @@ class RawResponse(SQLModel, table=True):
     provider: str = Field(max_length=50)
     symbol: str = Field(max_length=20)
     response_data: dict = Field(sa_column=Column(JSONB))
-    received_at: datetime = Field(default_factory=lambda: datetime.utcnow())
+    received_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class PricePoint(SQLModel, table=True):
     id: UUID= Field(default_factory=UUID, primary_key=True)
@@ -20,7 +20,7 @@ class PricePoint(SQLModel, table=True):
     provider: str = Field(max_length=50)
     timestamp: datetime
     raw_response_id: UUID = Field(default=None, foreign_key="rawresponse.id")
-    created_at: datetime = Field(default_factory=lambda :datetime.utcnow())
+    created_at: datetime = Field(default_factory=lambda :datetime.now(timezone.utc))
 
 class SymbolAverage(SQLModel, table=True):
     symbol: str = Field(primary_key=True, max_length=20)
@@ -34,4 +34,4 @@ class PollingJob(SQLModel, table=True):
     interval: int = Field(sa_column=Column("interval",Integer, nullable=False))
     is_active: bool = Field(default=True)
     last_run_at: Optional[datetime] = None
-    created_at: datetime = Field(default_factory=lambda:datetime.utcnow())
+    created_at: datetime = Field(default_factory=lambda:datetime.now(timezone.utc))
