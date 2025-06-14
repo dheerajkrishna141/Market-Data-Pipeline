@@ -6,6 +6,7 @@ import yfinance as yf
 from fastapi import HTTPException
 
 from app.models.models import RawResponse, PricePoint
+from scripts.kafkaProducer import publish_price_event
 
 
 def store_raw_response_and_return_price_point(symbol:str, session:Session):
@@ -32,6 +33,11 @@ def store_raw_response_and_return_price_point(symbol:str, session:Session):
         provider=raw_response['provider'],
         symbol=raw_response['symbol']
     )
+
+    try:
+        publish_price_event(processed_data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error publishing price event: {str(e)}")
 
     try:
         session.add(new_entry)

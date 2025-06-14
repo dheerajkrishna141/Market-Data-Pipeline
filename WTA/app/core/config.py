@@ -2,6 +2,8 @@ from pydantic_settings import BaseSettings;
 
 class Settings(BaseSettings):
     DATABASE_URL: str
+    KAFKA_BOOTSTRAP_SERVERS: str
+    KAFKA_PRICE_TOPIC: str
 
 
     class Config:
