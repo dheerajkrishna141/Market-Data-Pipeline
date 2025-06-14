@@ -1,5 +1,6 @@
-from sqlmodel import Session
 import uuid
+
+from sqlmodel import Session
 
 from app.models.models import PollingJob
 
@@ -17,10 +18,9 @@ def creating_polling_job(symbols: list[str], interval: int, provider: str, sessi
         session.add(new_job)
         session.commit()
         session.refresh(new_job)
-        return {"job_id": str(new_job.job_id), "status":"accepted", "config": return_config}
+        return {"job_id": str(new_job.job_id), "status": "accepted", "config": return_config}
     except Exception as e:
         session.rollback()
         raise Exception(f"Error creating polling job: {str(e)}")
     finally:
         session.close()
-

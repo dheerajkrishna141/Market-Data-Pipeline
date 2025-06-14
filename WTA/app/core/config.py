@@ -4,6 +4,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     KAFKA_BOOTSTRAP_SERVERS: str
     KAFKA_PRICE_TOPIC: str
+    TEST_DATABASE_URL: str
 
 
     class Config:

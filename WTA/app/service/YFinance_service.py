@@ -1,8 +1,9 @@
 # app/services/market_data.py
 
-import yfinance as yf
-from datetime import datetime, timezone
 import logging
+from datetime import datetime, timezone
+
+import yfinance as yf
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -40,4 +41,3 @@ class YFinanceProvider:
         except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Failed to parse raw yfinance data. Missing key or wrong type: {e}")
             return None, None
-

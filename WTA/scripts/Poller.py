@@ -1,16 +1,14 @@
-
 import logging
+import os
+import signal
+import sys
 import time
+import uuid
 
 from sqlalchemy import create_engine, or_, func, Interval
 from sqlalchemy.orm import sessionmaker
-import signal
-import uuid
-import os
-import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 
 from app.core.config import settings
 from app.models.models import PollingJob, RawResponse, PricePoint
@@ -20,7 +18,6 @@ from scripts.kafkaProducer import publish_price_event, flush_producer
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
-
 
 try:
     engine = create_engine(settings.DATABASE_URL,
@@ -33,17 +30,20 @@ except Exception as e:
 
 running = True
 
+
 def graceful_shutdown():
     global running
     logger.info("Shutting down gracefully...")
     running = False
 
+
 signal.signal(signal.SIGINT, graceful_shutdown)
 signal.signal(signal.SIGTERM, graceful_shutdown)
 
+
 def execute_job(job: PollingJob, db_session):
     logger.info(f"Executing job {job.job_id} for symbols: {job.symbols}")
-    #Create an instance of the selected provider
+    # Create an instance of the selected provider
     provider = YFinanceProvider()
     events_to_publish = []
 
@@ -54,7 +54,8 @@ def execute_job(job: PollingJob, db_session):
                 logger.warning(f"No data found for symbol: {symbol}")
                 continue
             new_response_id = uuid.uuid4()
-            new_raw_response = RawResponse(id=new_response_id, provider=job.provider, symbol=symbol, response_data=raw_data)
+            new_raw_response = RawResponse(id=new_response_id, provider=job.provider, symbol=symbol,
+                                           response_data=raw_data)
             db_session.add(new_raw_response)
 
             result = provider.parse_price_data(raw_data)
@@ -94,13 +95,18 @@ def execute_job(job: PollingJob, db_session):
         logger.error(f"A problem occurred while executing job {job.job_id}: {e}")
         db_session.rollback()
 
+
 def poll_for_jobs():
     logger.info("Poller service started.")
 
     while running:
         try:
             with sessionLocal() as db_session:
-                due_jobs = db_session.query(PollingJob).filter(PollingJob.is_active, or_(PollingJob.last_run_at == None, func.now() >= PollingJob.last_run_at + (PollingJob.interval * func.cast("1 second", Interval)))).all()
+                due_jobs = db_session.query(PollingJob).filter(PollingJob.is_active, or_(PollingJob.last_run_at == None,
+                                                                                         func.now() >= PollingJob.last_run_at + (
+                                                                                                     PollingJob.interval * func.cast(
+                                                                                                 "1 second",
+                                                                                                 Interval)))).all()
                 if due_jobs:
                     logger.info(f"Found {len(due_jobs)} due jobs to execute.")
                     for job in due_jobs:
@@ -120,16 +126,6 @@ def poll_for_jobs():
     flush_producer()
     logger.info("Poller service shutdown complete.")
 
+
 if __name__ == "__main__":
     poll_for_jobs()
-
-
-
-
-
-
-
-
-
-
-

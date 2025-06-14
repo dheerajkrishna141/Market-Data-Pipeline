@@ -108,7 +108,6 @@ def consumer_price_event():
                     raise KafkaException(msg.error())
             else:
                 try:
-                    print(msg.value())
                     price_data = json.loads(msg.value().decode('utf-8'))
                     price_event = PricePoint.model_validate(price_data)
 

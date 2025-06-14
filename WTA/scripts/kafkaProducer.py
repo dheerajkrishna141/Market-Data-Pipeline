@@ -3,19 +3,15 @@ import logging
 
 from confluent_kafka import Producer
 
-
-
 from app.core.config import settings
 from app.models.models import PricePoint
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 producer_config = {
     'bootstrap.servers': settings.KAFKA_BOOTSTRAP_SERVERS
 }
-
 
 try:
     producer = Producer(producer_config)
@@ -23,6 +19,7 @@ try:
 except Exception as e:
     logger.error(f"Failed to initialize Kafka Producer: {e}")
     producer = None
+
 
 def delivery_report(err, msg):
     if err is not None:
@@ -41,7 +38,7 @@ def publish_price_event(price_event):
         event_key = price_event['symbol'].encode('utf-8')
 
         producer.produce(
-            topic= settings.KAFKA_PRICE_TOPIC,
+            topic=settings.KAFKA_PRICE_TOPIC,
             key=event_key,
             value=event_value,
             callback=delivery_report
@@ -53,6 +50,7 @@ def publish_price_event(price_event):
 
     except Exception as e:
         logger.error(f"Failed to publish price event: {e}")
+
 
 def flush_producer():
     if producer is not None:
