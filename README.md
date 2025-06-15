@@ -1,4 +1,4 @@
-# Real-Time Market Data Pipeline
+# Market Data Pipeline
 
 ## Overview
 
