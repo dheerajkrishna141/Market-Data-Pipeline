@@ -2,7 +2,7 @@
 
 ## Overview
 
-This application provides a REST API to fetch the latest stock prices on-demand and to set up recurring polling jobs for continuous data collection. New price points are published to a Kafka topic, processed by a background consumer to calculate a 5-point moving average, and stored in a PostgreSQL database for historical analysis and retrieval.
+This application provides a REST API to fetch the latest stock prices on-demand and to set up recurring polling jobs for continuous data collection. New price points are published to a Kafka topic, processed by a background consumer to calculate a 5-point moving average, and stored in a PostgreSQL database.
 
 
 ---
