@@ -20,7 +20,7 @@ This application provides a REST API to fetch the latest stock prices on-demand 
 The system is designed as a set of interacting microservices, communicating asynchronously through a message queue. This decouples the components, improving fault tolerance and scalability.
 
 ### System Sequential Diagram
-![System Architecture](/assets/sequential_diagram.png)
+![System Architecture](/WTA/assets/sequential_diagram.png)
 
 
 ## Technology Stack
@@ -46,7 +46,7 @@ Follow these instructions to get the entire application stack running on your lo
 
 
 ### Documentation
-- **API Documentation**: The FastAPI application automatically generates interactive API documentation. You can access it at [API-Documentation](assets/documentation.html).
+- **API Documentation**: The FastAPI application automatically generates interactive API documentation. You can access it at [API-Documentation](https://dheerajkrishna141.github.io/blockhouse/).
 
 ### Configuration
 
