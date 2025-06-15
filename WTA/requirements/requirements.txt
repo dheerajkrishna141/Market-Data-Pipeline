@@ -9,3 +9,4 @@ pytest
 httpx
 confluent-kafka
 starlette
+pytest-mock
