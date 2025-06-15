@@ -1,14 +1,23 @@
 import uuid
 
+from fastapi import HTTPException
 from sqlmodel import Session
 
 from app.models.models import PollingJob
+from app.service.YFinance_service import YFinanceProvider
 
 
 def creating_polling_job(symbols: list[str], interval: int, provider: str, session: Session):
     job_id = uuid.uuid4()
+    #Instantiate the custom provider
+    providerInstance = YFinanceProvider()
 
-    new_job = PollingJob(job_id=job_id, symbols=symbols, interval=interval, provider=provider, is_active=True)
+    for symbol in symbols:
+        if providerInstance.validate_symbol(symbol) is False:
+            raise HTTPException(status_code=404, detail=f"Symbol {symbol} not found in provider {provider}")
+
+
+    new_job = PollingJob(job_id=job_id, symbols=symbols, interval=interval, provider=providerInstance, is_active=True)
     return_config = {
         "symbols": symbols,
         "interval": interval,

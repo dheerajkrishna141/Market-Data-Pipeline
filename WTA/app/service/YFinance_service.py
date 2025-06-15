@@ -11,6 +11,14 @@ logging.basicConfig(level=logging.INFO)
 
 class YFinanceProvider:
 
+    def validate_symbol(self, symbol: str):
+        try:
+            provider = YFinanceProvider()
+            data = provider.fetch_price_data(symbol)
+            return data is not None and "regularMarketPrice" in data
+        except Exception as e:
+            return False
+
     def fetch_price_data(self, symbol: str):
 
         try:

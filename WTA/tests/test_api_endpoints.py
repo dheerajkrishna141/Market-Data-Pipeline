@@ -2,11 +2,8 @@ import os
 import sys
 
 import pytest
-from click.termui import raw_terminal
-from fastapi import Depends
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from sqlmodel import Session, SQLModel, select
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -33,11 +30,11 @@ def setup_database():
     SQLModel.metadata.create_all(bind=engine)
 
 
-
 @pytest.fixture(scope="function")
 def test_client():
     with TestClient(app) as client:
         yield client
+
 
 def test_get_latest_price(test_client: TestClient):
     response = test_client.get(
@@ -72,7 +69,6 @@ def test_get_latest_price_not_found(test_client: TestClient):
     assert data["detail"] == "No data found for symbol: FAKE"
 
 
-
 def test_create_polling_job(test_client: TestClient):
     response = test_client.post(
         "/prices/poll",
@@ -94,7 +90,7 @@ def test_create_polling_job(test_client: TestClient):
 
     with Session(engine) as db_session:
         stmt = select(PollingJob).where(PollingJob.job_id == job_id)
-        job = db_session.exec(stmt).first();
+        job = db_session.exec(stmt).first()
 
         assert job is not None
         assert job.symbols == ["AAPL", "GOOGL"]

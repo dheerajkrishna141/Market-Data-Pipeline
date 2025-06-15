@@ -43,11 +43,7 @@ services:
     container_name: market-data-api
     ports:
       - "8080:8080"
-    environment:
-      - DATABASE_URL=postgresql://root:root@db:5432/postgres
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
-      - KAFKA_PRICE_TOPIC=price_topic
-      - TEST_DATABASE_URL=postgresql://postgres:root@db:5432/test
+    env_file: .env.prod
     networks:
       - app-network
     depends_on:
@@ -60,10 +56,7 @@ services:
     image: dheerajkrishna141/market-data-pipeline:0.1
     container_name: market-data-poller
     command: python scripts/Poller.py
-    environment:
-      - DATABASE_URL=postgresql://root:root@db:5432/postgres
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
-      - KAFKA_PRICE_TOPIC=price_topic
+    env_file: .env.prod
     depends_on:
       kafka:
         condition: service_healthy
@@ -76,10 +69,7 @@ services:
     image: dheerajkrishna141/market-data-pipeline:0.1
     container_name: market-data-consumer
     command: python scripts/MAConsumer.py
-    environment:
-      - DATABASE_URL=postgresql://root:root@db:5432/postgres
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
-      - KAFKA_PRICE_TOPIC=price_topic
+    env_file: .env.prod
     depends_on:
       kafka:
         condition: service_healthy
