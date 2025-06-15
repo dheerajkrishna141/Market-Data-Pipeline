@@ -4,3 +4,8 @@ sqlalchemy
 psycopg2-binary
 pydantic-settings
 yfinance
+sqlmodel
+pytest
+httpx
+confluent-kafka
+starlette

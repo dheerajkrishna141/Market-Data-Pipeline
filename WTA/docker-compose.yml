@@ -1,0 +1,113 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - app-network
+
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.3
+    hostname: kafka
+    container_name: kafka
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:29092 --list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  api:
+    image: dheerajkrishna141/market-data-pipeline:0.1
+    container_name: market-data-api
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgresql://root:root@db:5432/postgres
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - KAFKA_PRICE_TOPIC=price_topic
+      - TEST_DATABASE_URL=postgresql://postgres:root@db:5432/test
+    networks:
+      - app-network
+    depends_on:
+      kafka:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+
+  poller:
+    image: dheerajkrishna141/market-data-pipeline:0.1
+    container_name: market-data-poller
+    command: python scripts/Poller.py
+    environment:
+      - DATABASE_URL=postgresql://root:root@db:5432/postgres
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - KAFKA_PRICE_TOPIC=price_topic
+    depends_on:
+      kafka:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  consumer:
+    image: dheerajkrishna141/market-data-pipeline:0.1
+    container_name: market-data-consumer
+    command: python scripts/MAConsumer.py
+    environment:
+      - DATABASE_URL=postgresql://root:root@db:5432/postgres
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - KAFKA_PRICE_TOPIC=price_topic
+    depends_on:
+      kafka:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+
+
+  db:
+    image: postgres:latest
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

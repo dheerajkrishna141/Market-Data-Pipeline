@@ -57,6 +57,7 @@ def execute_job(job: PollingJob, db_session):
             new_raw_response = RawResponse(id=new_response_id, provider=job.provider, symbol=symbol,
                                            response_data=raw_data)
             db_session.add(new_raw_response)
+            db_session.flush()
 
             result = provider.parse_price_data(raw_data)
             if result is None:
@@ -117,7 +118,7 @@ def poll_for_jobs():
         except Exception as e:
             logger.error(f"An error occurred while polling for jobs: {e}")
 
-        for _ in range(5):
+        for _ in range(settings.POLLING_INTERVAL):
             if not running:
                 break
             time.sleep(1)
